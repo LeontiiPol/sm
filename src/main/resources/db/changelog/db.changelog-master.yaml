@@ -1,0 +1,77 @@
+databaseChangeLog:
+- changeSet:
+    id: initial
+    author: polovinko
+
+- changeSet:
+    id: 001
+    author: polovinko
+    changes:
+      - sqlFile:
+          encoding: utf8
+          relativeToChangelogFile: true
+          stripComments: true
+          path: ./sql/001_init.sql
+- changeSet:
+      id: 002
+      author: polovinko
+      changes:
+          - sqlFile:
+                encoding: utf8
+                relativeToChangelogFile: true
+                stripComments: true
+                path: ./sql/002_users.sql
+- changeSet:
+    id: 003
+    author: polovinko
+    changes:
+      - sqlFile:
+          encoding: utf8
+          relativeToChangelogFile: true
+          stripComments: true
+          path: ./sql/003_property.sql
+- changeSet:
+    id: 004
+    author: polovinko
+    changes:
+      - sqlFile:
+          encoding: utf8
+          relativeToChangelogFile: true
+          stripComments: true
+          path: ./sql/004_alter_user.sql
+- changeSet:
+    id: 005
+    author: polovinko
+    changes:
+      - sqlFile:
+          encoding: utf8
+          relativeToChangelogFile: true
+          stripComments: true
+          path: ./sql/005_post_sequence.sql
+- changeSet:
+    id: 006
+    author: polovinko
+    changes:
+      - sqlFile:
+          encoding: utf8
+          relativeToChangelogFile: true
+          stripComments: true
+          path: ./sql/006_sequences_for_id_generation.sql
+- changeSet:
+    id: 007
+    author: polovinko
+    changes:
+      - sqlFile:
+          encoding: utf8
+          relativeToChangelogFile: true
+          stripComments: true
+          path: ./sql/007_create_car.sql
+- changeSet:
+    id: 008
+    author: polovinko
+    changes:
+      - sqlFile:
+          encoding: utf8
+          relativeToChangelogFile: true
+          stripComments: true
+          path: ./sql/008_create_user_profile.sql

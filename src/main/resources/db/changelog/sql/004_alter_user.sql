@@ -1,0 +1,1 @@
+ALTER TABLE training.user RENAME TO users

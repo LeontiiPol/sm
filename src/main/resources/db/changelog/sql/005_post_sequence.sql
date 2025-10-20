@@ -1,0 +1,2 @@
+CREATE SEQUENCE post_sequence
+INCREMENT BY 1;
