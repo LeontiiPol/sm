@@ -1,5 +1,5 @@
 package ru.polovinko.state_machine.domain;
 
 public enum State {
-    INITIAL, S1, S2
+    INITIAL, S1, S1I, S2, S3
 }

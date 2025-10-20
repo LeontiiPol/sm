@@ -12,7 +12,7 @@ import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import ru.polovinko.state_machine.domain.Event;
 import ru.polovinko.state_machine.domain.State;
 
-import java.util.EnumSet;
+import java.util.Optional;
 
 @Configuration
 @EnableStateMachine
@@ -28,9 +28,18 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<State,
 
     @Override
     public void configure(StateMachineStateConfigurer<State, Event> states) throws Exception {
-        states.withStates()
+        states
+                .withStates()
                 .initial(State.INITIAL)
-                .states(EnumSet.allOf(State.class));
+                .state(State.S1)
+                .and()
+                .withStates()
+                    .parent(State.S1)
+                    .initial(State.S1I)
+                    .end(State.S2)
+                .and()
+                .withStates()
+                .end(State.S3);
     }
 
     @Override
@@ -38,8 +47,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<State,
         transitions.withExternal()
                 .source(State.INITIAL).target(State.S1).event(Event.E1)
                 .and()
+//                .withExternal()
+//                .source(State.S1).target(State.S2).event(Event.E2)
+//                .and()
                 .withExternal()
-                .source(State.S1).target(State.S2).event(Event.E2);
+                .source(State.S1I).target(State.S2).event(Event.E3)
+                .and()
+                .withExternal()
+                .source(State.S2).target(State.S3).event(Event.E4);
     }
 
     @Bean
@@ -48,7 +63,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<State,
             @Override
             public void stateChanged(org.springframework.statemachine.state.State<State, Event> from,
                                      org.springframework.statemachine.state.State<State, Event> to) {
+                System.out.println("------------------------------------");
+                System.out.println("State change from " + Optional.ofNullable(from).map(org.springframework.statemachine.state.State::getId).orElse(null));
                 System.out.println("State change to " + to.getId());
+                System.out.println("------------------------------------");
             }
         };
     }
