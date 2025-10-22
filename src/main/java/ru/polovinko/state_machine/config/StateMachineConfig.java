@@ -1,5 +1,7 @@
 package ru.polovinko.state_machine.config;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.statemachine.config.EnableStateMachine;
@@ -7,67 +9,61 @@ import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.config.common.annotation.AnnotationBuilder;
 import org.springframework.statemachine.listener.StateMachineListener;
-import org.springframework.statemachine.listener.StateMachineListenerAdapter;
-import ru.polovinko.state_machine.domain.Event;
-import ru.polovinko.state_machine.domain.State;
+import ru.polovinko.state_machine.domain.SmEvent;
+import ru.polovinko.state_machine.domain.SmState;
+import ru.polovinko.state_machine.listeners.DefaultStateMachineListener;
+import ru.polovinko.state_machine.service.CurrentStateMachineHolder;
 
-import java.util.Optional;
+import java.util.Random;
 
 @Configuration
 @EnableStateMachine
-public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<State, Event> {
+@Log4j2
+@RequiredArgsConstructor
+public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmState, SmEvent> {
+
+    private final CurrentStateMachineHolder stateMachineHolder;
 
     @Override
-    public void configure(StateMachineConfigurationConfigurer<State, Event> config) throws Exception {
+    public void configure(StateMachineConfigurationConfigurer<SmState, SmEvent> config) throws Exception {
+        System.out.println("Конфигурация стейт-машины");
         config.withConfiguration()
                 .autoStartup(true)
-                .listener(listener());
+                .machineId("main")
+                .listener(new DefaultStateMachineListener(stateMachineHolder));
 
     }
 
     @Override
-    public void configure(StateMachineStateConfigurer<State, Event> states) throws Exception {
-        states
-                .withStates()
-                .initial(State.INITIAL)
-                .state(State.S1)
+    public void configure(StateMachineStateConfigurer<SmState, SmEvent> states) throws Exception {
+        states.withStates()
+                .initial(SmState.INITIAL)
+                .state(SmState.S1)
+                .state(SmState.S2)
+                .end(SmState.S3)
                 .and()
                 .withStates()
-                    .parent(State.S1)
-                    .initial(State.S1I)
-                    .end(State.S2)
-                .and()
-                .withStates()
-                .end(State.S3);
+                    .parent(SmState.S2)
+                    .region("myRegionId")
+                    .initial(SmState.S2I)
+                    .end(SmState.S2F);
     }
 
     @Override
-    public void configure(StateMachineTransitionConfigurer<State, Event> transitions) throws Exception {
+    public void configure(StateMachineTransitionConfigurer<SmState, SmEvent> transitions) throws Exception {
         transitions.withExternal()
-                .source(State.INITIAL).target(State.S1).event(Event.E1)
-                .and()
-//                .withExternal()
-//                .source(State.S1).target(State.S2).event(Event.E2)
-//                .and()
-                .withExternal()
-                .source(State.S1I).target(State.S2).event(Event.E3)
+                    .source(SmState.INITIAL).target(SmState.S1).event(SmEvent.E1)
                 .and()
                 .withExternal()
-                .source(State.S2).target(State.S3).event(Event.E4);
+                    .source(SmState.S1).target(SmState.S2).event(SmEvent.E2)
+                .and()
+                .withExternal()
+                    .source(SmState.S2I).target(SmState.S2F).event(SmEvent.E3)
+                .and()
+                .withExternal()
+                    .source(SmState.S2F).target(SmState.S3).event(SmEvent.E4);
     }
 
-    @Bean
-    public StateMachineListener<State, Event> listener() {
-        return new StateMachineListenerAdapter<>() {
-            @Override
-            public void stateChanged(org.springframework.statemachine.state.State<State, Event> from,
-                                     org.springframework.statemachine.state.State<State, Event> to) {
-                System.out.println("------------------------------------");
-                System.out.println("State change from " + Optional.ofNullable(from).map(org.springframework.statemachine.state.State::getId).orElse(null));
-                System.out.println("State change to " + to.getId());
-                System.out.println("------------------------------------");
-            }
-        };
-    }
 }
