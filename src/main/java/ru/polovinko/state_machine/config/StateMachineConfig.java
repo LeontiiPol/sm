@@ -40,15 +40,19 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
     public void configure(StateMachineStateConfigurer<SmState, SmEvent> states) throws Exception {
         states.withStates()
                 .initial(SmState.INITIAL)
+                .state(SmState.INITIAL)
                 .state(SmState.S1)
                 .state(SmState.S2)
-                .end(SmState.S3)
                 .and()
                 .withStates()
                     .parent(SmState.S2)
-                    .region("myRegionId")
                     .initial(SmState.S2I)
-                    .end(SmState.S2F);
+                    .state(SmState.S2I)
+                    .state(SmState.S2F)
+                    .and()
+                .withStates()
+                .state(SmState.S3)
+                .end(SmState.S3);
     }
 
     @Override

@@ -36,7 +36,8 @@ public class StateMachineApplication implements CommandLineRunner {
       stateMachineHolder.getStateMachine().sendEvent(SmEvent.E2);
       System.out.println("Current state: " + stateMachineHolder.getStateMachine().getState().getId());
       System.out.println("send E3");
-      stateMachineHolder.getInnerStateMachine().sendEvent(SmEvent.E3);
+      stateMachineHolder.getStateMachine().sendEvent(SmEvent.E3);
+      System.out.println("Current state: " + stateMachineHolder.getStateMachine().getState().getId());
       System.out.println("Current state inner SM: " + stateMachineHolder.getInnerStateMachine().getState().getId());
       System.out.println("send E4");
       stateMachineHolder.getStateMachine().sendEvent(SmEvent.E4);
