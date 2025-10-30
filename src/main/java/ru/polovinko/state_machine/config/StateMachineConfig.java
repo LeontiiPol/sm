@@ -4,19 +4,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.statemachine.StateContext;
+import org.springframework.statemachine.action.Action;
+import org.springframework.statemachine.action.Actions;
 import org.springframework.statemachine.config.EnableStateMachine;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
-import org.springframework.statemachine.config.common.annotation.AnnotationBuilder;
-import org.springframework.statemachine.listener.StateMachineListener;
 import ru.polovinko.state_machine.domain.SmEvent;
 import ru.polovinko.state_machine.domain.SmState;
 import ru.polovinko.state_machine.listeners.DefaultStateMachineListener;
 import ru.polovinko.state_machine.service.CurrentStateMachineHolder;
-
-import java.util.Random;
 
 @Configuration
 @EnableStateMachine
@@ -64,10 +63,24 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
                     .source(SmState.S1).target(SmState.S2).event(SmEvent.E2)
                 .and()
                 .withExternal()
-                    .source(SmState.S2I).target(SmState.S2F).event(SmEvent.E3)
+                    .source(SmState.S2I).target(SmState.S2F).event(SmEvent.E3).action(Actions.errorCallingAction(myAction(), errorAction()))
                 .and()
                 .withExternal()
                     .source(SmState.S2F).target(SmState.S3).event(SmEvent.E4);
     }
 
+    @Bean
+    public Action<SmState, SmEvent> myAction() {
+        return context -> {
+            throw new RuntimeException("MyError");
+        };
+    }
+
+    @Bean
+    public Action<SmState, SmEvent> errorAction() {
+        return context -> {
+            Exception exception = context.getException();
+            log.error("Возникла ошибка", exception);
+        };
+    }
 }
