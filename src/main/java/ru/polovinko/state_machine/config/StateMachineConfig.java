@@ -42,8 +42,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
     public void configure(StateMachineStateConfigurer<SmState, SmEvent> states) throws Exception {
         states.withStates()
                 .initial(SmState.INITIAL)
-                .choice(SmState.S2)
-                .end(SmState.S3)
+                .fork(SmState.S2)
+                .join(SmState.S3)
                 .states(EnumSet.allOf(SmState.class));
     }
 
@@ -55,13 +55,15 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
                 .withExternal()
                     .source(SmState.S1).target(SmState.S2).event(SmEvent.E2)
                 .and()
-                .withChoice()
+                .withFork()
                     .source(SmState.S2)
-                    .first(SmState.S2I, guard())
-                    .last(SmState.S2F)
+                    .target(SmState.S2I)
+                    .target(SmState.S2F)
                 .and()
-                .withExternal()
-                    .source(SmState.S2I).target(SmState.S3).event(SmEvent.E3);
+                .withJoin()
+                    .source(SmState.S2I)
+                    .source(SmState.S2F)
+                    .target(SmState.S3);
     }
 
     @Bean
