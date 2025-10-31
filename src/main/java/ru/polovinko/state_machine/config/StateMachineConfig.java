@@ -12,10 +12,13 @@ import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.guard.Guard;
 import ru.polovinko.state_machine.domain.SmEvent;
 import ru.polovinko.state_machine.domain.SmState;
 import ru.polovinko.state_machine.listeners.DefaultStateMachineListener;
 import ru.polovinko.state_machine.service.CurrentStateMachineHolder;
+
+import java.util.EnumSet;
 
 @Configuration
 @EnableStateMachine
@@ -39,19 +42,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
     public void configure(StateMachineStateConfigurer<SmState, SmEvent> states) throws Exception {
         states.withStates()
                 .initial(SmState.INITIAL)
-                .state(SmState.INITIAL)
-                .state(SmState.S1)
-                .state(SmState.S2)
-                .and()
-                .withStates()
-                    .parent(SmState.S2)
-                    .initial(SmState.S2I)
-                    .state(SmState.S2I)
-                    .state(SmState.S2F)
-                    .and()
-                .withStates()
-                .state(SmState.S3)
-                .end(SmState.S3);
+                .choice(SmState.S2)
+                .end(SmState.S3)
+                .states(EnumSet.allOf(SmState.class));
     }
 
     @Override
@@ -62,11 +55,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
                 .withExternal()
                     .source(SmState.S1).target(SmState.S2).event(SmEvent.E2)
                 .and()
-                .withExternal()
-                    .source(SmState.S2I).target(SmState.S2F).event(SmEvent.E3).action(Actions.errorCallingAction(myAction(), errorAction()))
+                .withChoice()
+                    .source(SmState.S2)
+                    .first(SmState.S2I, guard())
+                    .last(SmState.S2F)
                 .and()
                 .withExternal()
-                    .source(SmState.S2F).target(SmState.S3).event(SmEvent.E4);
+                    .source(SmState.S2I).target(SmState.S3).event(SmEvent.E3);
     }
 
     @Bean
@@ -82,5 +77,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
             Exception exception = context.getException();
             log.error("Возникла ошибка", exception);
         };
+    }
+
+    @Bean
+    public Guard<SmState, SmEvent> guard() {
+        return context -> false;
     }
 }
