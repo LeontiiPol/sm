@@ -14,7 +14,6 @@ import ru.polovinko.state_machine.domain.SmState;
 import ru.polovinko.state_machine.service.CurrentStateMachineHolder;
 
 import java.util.Optional;
-import java.util.Random;
 
 @Log4j2
 @RequiredArgsConstructor

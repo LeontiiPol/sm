@@ -13,9 +13,13 @@ import org.springframework.statemachine.config.builders.StateMachineConfiguratio
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.guard.Guard;
+import org.springframework.statemachine.persist.DefaultStateMachinePersister;
+import org.springframework.statemachine.persist.StateMachinePersister;
+import ru.polovinko.state_machine.domain.ContextObject;
 import ru.polovinko.state_machine.domain.SmEvent;
 import ru.polovinko.state_machine.domain.SmState;
 import ru.polovinko.state_machine.listeners.DefaultStateMachineListener;
+import ru.polovinko.state_machine.persist.InMemoryStateMachinePersist;
 import ru.polovinko.state_machine.service.CurrentStateMachineHolder;
 
 import java.util.EnumSet;
@@ -42,9 +46,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
     public void configure(StateMachineStateConfigurer<SmState, SmEvent> states) throws Exception {
         states.withStates()
                 .initial(SmState.INITIAL)
-                .fork(SmState.S2)
-                .join(SmState.S3)
-                .states(EnumSet.allOf(SmState.class));
+                .state(SmState.INITIAL)
+                .state(SmState.S1)
+                .state(SmState.S2)
+                .state(SmState.S3)
+                .end(SmState.S4);
     }
 
     @Override
@@ -55,15 +61,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
                 .withExternal()
                     .source(SmState.S1).target(SmState.S2).event(SmEvent.E2)
                 .and()
-                .withFork()
-                    .source(SmState.S2)
-                    .target(SmState.S2I)
-                    .target(SmState.S2F)
+                .withExternal()
+                    .source(SmState.S2).target(SmState.S3).event(SmEvent.E3)
                 .and()
-                .withJoin()
-                    .source(SmState.S2I)
-                    .source(SmState.S2F)
-                    .target(SmState.S3);
+                .withExternal()
+                    .source(SmState.S3).target(SmState.S4).event(SmEvent.E4);
     }
 
     @Bean
@@ -84,5 +86,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
     @Bean
     public Guard<SmState, SmEvent> guard() {
         return context -> false;
+    }
+
+    @Bean
+    public StateMachinePersister<SmState, SmEvent, ContextObject> smPersister() {
+        return new DefaultStateMachinePersister<>(new InMemoryStateMachinePersist());
     }
 }
