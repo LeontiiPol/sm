@@ -4,21 +4,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
-import org.springframework.statemachine.action.Actions;
 import org.springframework.statemachine.config.EnableStateMachine;
 import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter;
 import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.guard.Guard;
+import org.springframework.statemachine.monitor.StateMachineMonitor;
 import org.springframework.statemachine.persist.DefaultStateMachinePersister;
 import org.springframework.statemachine.persist.StateMachinePersister;
 import ru.polovinko.state_machine.domain.ContextObject;
 import ru.polovinko.state_machine.domain.SmEvent;
 import ru.polovinko.state_machine.domain.SmState;
 import ru.polovinko.state_machine.listeners.DefaultStateMachineListener;
+import ru.polovinko.state_machine.listeners.SmMonitor;
 import ru.polovinko.state_machine.persist.InMemoryStateMachinePersist;
 import ru.polovinko.state_machine.service.CurrentStateMachineHolder;
 
@@ -38,8 +38,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
         config.withConfiguration()
                 .autoStartup(true)
                 .machineId("main")
-                .listener(new DefaultStateMachineListener(stateMachineHolder));
-
+                .listener(new DefaultStateMachineListener(stateMachineHolder))
+                .and()
+                    .withMonitoring().monitor(stateMachineMonitor());
     }
 
     @Override
@@ -59,7 +60,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
                     .source(SmState.INITIAL).target(SmState.S1).event(SmEvent.E1)
                 .and()
                 .withExternal()
-                    .source(SmState.S1).target(SmState.S2).event(SmEvent.E2)
+                    .source(SmState.S1)
+                    .target(SmState.S2)
+                    .event(SmEvent.E2)
+                    .action(myAction())
+                    .action(mySlowAction())
                 .and()
                 .withExternal()
                     .source(SmState.S2).target(SmState.S3).event(SmEvent.E3)
@@ -71,7 +76,21 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
     @Bean
     public Action<SmState, SmEvent> myAction() {
         return context -> {
-            throw new RuntimeException("MyError");
+            System.out.println("myAction works");
+            System.out.println("myAction finished");
+        };
+    }
+
+    @Bean
+    public Action<SmState, SmEvent> mySlowAction() {
+        return context -> {
+            System.out.println("mySlowAction works");
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("mySlowAction finished");
         };
     }
 
@@ -91,5 +110,10 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<SmStat
     @Bean
     public StateMachinePersister<SmState, SmEvent, ContextObject> smPersister() {
         return new DefaultStateMachinePersister<>(new InMemoryStateMachinePersist());
+    }
+
+    @Bean
+    public StateMachineMonitor<SmState, SmEvent> stateMachineMonitor() {
+        return new SmMonitor();
     }
 }
